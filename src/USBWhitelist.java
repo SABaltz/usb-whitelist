@@ -1,10 +1,14 @@
 import java.io.*;
 import java.nio.file.*;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class USBWhitelist {
 
     private static final String WHITELIST_FILE = "/etc/usb_whitelist.txt";
+    private static final Pattern DEVICE_PATTERN = Pattern.compile("Bus\\s+(\\d+)\\s+Device\\s+(\\d+).+ID\\s(\\w+:\\w+)\\s(.+)$", Pattern.CASE_INSENSITIVE);
+    private static final List<String> WHITELIST = List.of("1234:5678", "abcd:ef12"); // Replace with your actual whitelist
 
     public static void main(String[] args) {
         if (args.length == 0) {
@@ -155,19 +159,41 @@ public class USBWhitelist {
         }
     }
 
-    private static void listConnectedUSBs() {
-        File devDir = new File("/dev");
-        File[] files = devDir.listFiles((dir, name) -> name.startsWith("sd")); // Assuming USB devices are named like 'sdX'
+    private static List<String> listConnectedUSBs() {
+        List<String> deviceIds = new ArrayList<>();
+        try {
+            Process process = Runtime.getRuntime().exec("lsusb");
+            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                Matcher matcher = DEVICE_PATTERN.matcher(line);
+                if (matcher.matches()) {
+                    String bus = matcher.group(1);
+                    String device = matcher.group(2);
+                    String id = matcher.group(3);
+                    String tag = matcher.group(4);
+                    deviceIds.add(id);
 
-        if (files != null && files.length > 0) {
-            System.out.println("Connected USB devices:");
-            for (File file : files) {
-                System.out.println(" - " + file.getName());
+                    System.out.println("USBid: " + id);
+                }
             }
-        } else {
-            System.out.println("No USB devices connected.");
+            reader.close();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
+        return deviceIds;
     }
+//        File devDir = new File("/dev");
+//        File[] files = devDir.listFiles((dir, name) -> name.startsWith("sd")); // Assuming USB devices are named like 'sdX'
+//
+//        if (files != null && files.length > 0) {
+//            System.out.println("Connected USB devices:");
+//            for (File file : files) {
+//                System.out.println(" - " + file.getName());
+//            }
+//        } else {
+//            System.out.println("No USB devices connected.");
+//        }
 
     private static void showWhitelist() {
         try (BufferedReader reader = new BufferedReader(new FileReader(WHITELIST_FILE))) {
