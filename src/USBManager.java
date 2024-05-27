@@ -12,7 +12,22 @@ public class USBManager {
     private static final String WHITELIST_FILE = System.getProperty("user.home") + "/usb_whitelist.txt";
 
     public static void addConnectedUSBs() {
-        Set<String> whitelist = loadWhitelist();
+        Set<String> whitelist = new HashSet<>();
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(WHITELIST_FILE))) {
+            String line;
+            System.out.println(reader.readLine());
+            while ((line = reader.readLine()) != null) {
+                Matcher matcher = DEVICE_PATTERN.matcher(line);
+                if (matcher.matches()) {
+                    String id = matcher.group(3);
+                    whitelist.add(id);
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
         List<String> usbIds = connectedUSBs();
 
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(WHITELIST_FILE, true))) {
@@ -33,23 +48,6 @@ public class USBManager {
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
-
-    private static Set<String> loadWhitelist() {
-        Set<String> whitelist = new HashSet<>();
-        try (BufferedReader reader = new BufferedReader(new FileReader(WHITELIST_FILE))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                Matcher matcher = DEVICE_PATTERN.matcher(line);
-                if (matcher.matches()) {
-                    String id = matcher.group(3);
-                    whitelist.add(id);
-                }
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return whitelist;
     }
 
     public static List<String> connectedUSBs() {
