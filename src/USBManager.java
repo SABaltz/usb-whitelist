@@ -1,8 +1,6 @@
 import java.io.*;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -12,41 +10,36 @@ public class USBManager {
     private static final String WHITELIST_FILE = System.getProperty("user.home") + "/usb_whitelist.txt";
 
     public static void addConnectedUSBs() {
-        Set<String> whitelist = new HashSet<>();
+        System.out.println(connectedUSBs());
+        List<String> connectedUSBs = connectedUSBs();
+//        System.out.println(readWhitelistFile());
 
-        try (BufferedReader reader = new BufferedReader(new FileReader(WHITELIST_FILE))) {
-            String line;
-            System.out.println(reader.readLine());
-            while ((line = reader.readLine()) != null) {
-                Matcher matcher = DEVICE_PATTERN.matcher(line);
-                if (matcher.matches()) {
-                    String id = matcher.group(3);
-                    whitelist.add(id);
+
+        BufferedWriter bufferedWriter = null;
+        try {
+            FileWriter fileWriter = new FileWriter(WHITELIST_FILE, true);
+            bufferedWriter = new BufferedWriter(fileWriter);
+
+
+            for (String usb : connectedUSBs) {
+                System.out.println(usb);
+                bufferedWriter.write(usb);
+                bufferedWriter.newLine();
+            }
+
+
+        } catch (IOException e) {
+            System.out.println("Error writing to file '" + WHITELIST_FILE + "'");
+            e.printStackTrace();
+        } finally {
+            // Ensure the bufferedWriter is closed in the finally block
+            if (bufferedWriter != null) {
+                try {
+                    bufferedWriter.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
             }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        List<String> usbIds = connectedUSBs();
-
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(WHITELIST_FILE, true))) {
-            for (String usb : usbIds) {
-                Matcher matcher = DEVICE_PATTERN.matcher(usb);
-                if (matcher.matches()) {
-                    String id = matcher.group(3);
-                    if (!whitelist.contains(id)) {
-                        writer.write(usb);
-                        writer.newLine();
-                        System.out.println("Added USB ID to whitelist: " + usb);
-                        whitelist.add(id);  // Add to set to avoid duplicates in the current run
-                    } else {
-                        System.out.println("USB ID already in whitelist: " + usb);
-                    }
-                }
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 
@@ -88,6 +81,19 @@ public class USBManager {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public static List<String> readWhitelistFile() {
+        List<String> lines = new ArrayList<>();
+        try (BufferedReader reader = new BufferedReader(new FileReader(WHITELIST_FILE))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                lines.add(line);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return lines;
     }
 
     public static boolean isWhitelisted(File deviceFile) {
