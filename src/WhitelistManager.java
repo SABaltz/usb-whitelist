@@ -1,8 +1,13 @@
 import java.io.*;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class WhitelistManager {
+    private static final Pattern DEVICE_PATTERN = Pattern.compile("Bus\\s+(\\d+)\\s+Device\\s+(\\d+).+ID\\s(\\w+:\\w+)\\s(.+)$", Pattern.CASE_INSENSITIVE);
 
     private static final String WHITELIST_FILE = System.getProperty("user.home") + "/usb_whitelist.txt";
 
@@ -58,4 +63,6 @@ public class WhitelistManager {
             e.printStackTrace();
         }
     }
+
+
 }
