@@ -22,6 +22,7 @@ public class USBManager {
                 if (!whiteListedUSBs.contains(usb)) {
                     bufferedWriter.write(usb);
                     bufferedWriter.newLine();
+                    System.out.println("Adding:----- " + usb);
                 }
             }
 
