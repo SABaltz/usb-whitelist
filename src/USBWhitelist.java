@@ -30,6 +30,7 @@ public class USBWhitelist {
                 if (args.length < 2) {
                     System.out.println("Usage: USBWhitelist add [usb_id]");
                 } else if (Objects.equals(args[1], "connected")) {
+                    addConnectedUSBs();
                     System.out.println("Adding all connected whitelists");
                 } else {
                     modifyWhitelist(args[1], true);
@@ -50,6 +51,13 @@ public class USBWhitelist {
                 break;
             default:
                 System.out.println("Unknown command: " + command);
+        }
+    }
+
+    private static void addConnectedUSBs(){
+        List<String> usbIds = listConnectedUSBs();
+        for (var usb : usbIds){
+            System.out.println(usb);
         }
     }
 
@@ -198,10 +206,7 @@ public class USBWhitelist {
             while ((line = reader.readLine()) != null) {
                 Matcher matcher = DEVICE_PATTERN.matcher(line);
                 if (matcher.matches()) {
-                    String bus = matcher.group(1);
-                    String device = matcher.group(2);
                     String id = matcher.group(3);
-                    String tag = matcher.group(4);
                     deviceIds.add(id);
 
                     System.out.println("USBid: " + id);
