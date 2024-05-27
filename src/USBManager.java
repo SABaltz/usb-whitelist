@@ -18,20 +18,17 @@ public class USBManager {
             FileWriter fileWriter = new FileWriter(WHITELIST_FILE, true);
             bufferedWriter = new BufferedWriter(fileWriter);
 
-
             for (String usb : connectedUSBs) {
-                if (!whiteListedUSBs.contains(usb)){
+                if (!whiteListedUSBs.contains(usb)) {
                     bufferedWriter.write(usb);
                     bufferedWriter.newLine();
                 }
             }
 
-
         } catch (IOException e) {
             System.out.println("Error writing to file '" + WHITELIST_FILE + "'");
             e.printStackTrace();
         } finally {
-            // Ensure the bufferedWriter is closed in the finally block
             if (bufferedWriter != null) {
                 try {
                     bufferedWriter.close();
@@ -53,7 +50,7 @@ public class USBManager {
                 if (matcher.matches()) {
                     String name = matcher.group(4);
                     String id = matcher.group(3);
-                    deviceIds.add(id);
+                    deviceIds.add(name + " , " + id);
                 }
             }
             reader.close();
@@ -64,21 +61,8 @@ public class USBManager {
     }
 
     public static void listConnectedUSBs() {
-        try {
-            Process process = Runtime.getRuntime().exec("lsusb");
-            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            String line;
-            while ((line = reader.readLine()) != null) {
-                Matcher matcher = DEVICE_PATTERN.matcher(line);
-                if (matcher.matches()) {
-                    String name = matcher.group(4);
-                    String id = matcher.group(3);
-                    System.out.println("USBid: " + id + " USB Name: " + name);
-                }
-            }
-            reader.close();
-        } catch (Exception e) {
-            e.printStackTrace();
+        for (String usb : connectedUSBs()) {
+            System.out.println(usb);
         }
     }
 
