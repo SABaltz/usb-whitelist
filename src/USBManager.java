@@ -10,10 +10,8 @@ public class USBManager {
     private static final String WHITELIST_FILE = System.getProperty("user.home") + "/usb_whitelist.txt";
 
     public static void addConnectedUSBs() {
-        System.out.println(connectedUSBs());
         List<String> connectedUSBs = connectedUSBs();
-//        System.out.println(readWhitelistFile());
-
+        List<String> whiteListedUSBs = readWhitelistFile();
 
         BufferedWriter bufferedWriter = null;
         try {
@@ -22,9 +20,10 @@ public class USBManager {
 
 
             for (String usb : connectedUSBs) {
-                System.out.println(usb);
-                bufferedWriter.write(usb);
-                bufferedWriter.newLine();
+                if (!whiteListedUSBs.contains(usb)){
+                    bufferedWriter.write(usb);
+                    bufferedWriter.newLine();
+                }
             }
 
 
