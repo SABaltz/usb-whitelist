@@ -7,8 +7,8 @@ import java.util.regex.Pattern;
 public class USBWhitelist {
 
     private static final String WHITELIST_FILE = System.getProperty("user.home") + "/usb_whitelist.txt";
-    private static final Pattern DEVICE_PATTERN = Pattern.compile("Bus\\s+(\\d+)\\s+Device\\s+(\\d+).+ID\\s(\\w+:\\w+)\\s(.+)$", Pattern.CASE_INSENSITIVE);
-    private static final List<String> WHITELIST = List.of("1234:5678", "abcd:ef12");
+    private static final Pattern DEVICE_PATTERN = Pattern.compile("Bus\\s+(\\d+)\\s+Device\\s+(\\d+):\\s+ID\\s+(\\w+:\\w+)\\s+(.+)", Pattern.CASE_INSENSITIVE);
+   private static final List<String> WHITELIST = List.of("1234:5678", "abcd:ef12");
     private static Path filePath = Paths.get(WHITELIST_FILE);
 
     public static void main(String[] args) {

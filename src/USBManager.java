@@ -10,14 +10,40 @@ public class USBManager {
     private static final String WHITELIST_FILE = System.getProperty("user.home") + "/usb_whitelist.txt";
 
     public static void addConnectedUSBs() {
-        List<String> usbIds = listConnectedUSBs();
-        for (var usb : usbIds) {
-            System.out.println(usb);
+        List<String> usbIds = connectedUSBs();
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(WHITELIST_FILE, true))) {
+            for (String usb : usbIds) {
+                writer.write(usb);
+                writer.newLine();
+                System.out.println("Added USB ID to whitelist: " + usb);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
-    public static List<String> listConnectedUSBs() {
-        List<String> deviceIds = new ArrayList<>();
+    public static List<String> connectedUSBs(){
+            List<String> deviceIds = new ArrayList<>();
+            try {
+                Process process = Runtime.getRuntime().exec("lsusb");
+                BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    Matcher matcher = DEVICE_PATTERN.matcher(line);
+                    if (matcher.matches()) {
+                        String name = matcher.group(4);
+                        String id = matcher.group(3);
+                        deviceIds.add(id);
+                    }
+                }
+                reader.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return deviceIds;
+        }
+
+    public static void listConnectedUSBs() {
         try {
             Process process = Runtime.getRuntime().exec("lsusb");
             BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
@@ -25,16 +51,15 @@ public class USBManager {
             while ((line = reader.readLine()) != null) {
                 Matcher matcher = DEVICE_PATTERN.matcher(line);
                 if (matcher.matches()) {
+                    String name = matcher.group(4);
                     String id = matcher.group(3);
-                    deviceIds.add(id);
-                    System.out.println("USBid: " + id);
+                    System.out.println("USBid: " + id + " USB Name: " + name);
                 }
             }
             reader.close();
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return deviceIds;
     }
 
     public static boolean isWhitelisted(File deviceFile) {
