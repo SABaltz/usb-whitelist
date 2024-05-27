@@ -18,20 +18,20 @@ public class USBWhitelist {
                 USBMonitor.checkStatus();
                 break;
             case "add":
-                if (args.length < 2) {
-                    System.out.println("Usage: USBWhitelist add [usb_id]");
-                } else if (Objects.equals(args[1], "connected")) {
+                if (Objects.equals(args[1], "connected") && Objects.equals(args[0], "add")) {
                     USBManager.addConnectedUSBs();
                     System.out.println("Adding all connected USBs to whitelist");
                 } else {
-                    WhitelistManager.modifyWhitelist(args[1], true);
+                    System.out.println("Usage: USBWhitelist add connected");
                 }
                 break;
             case "delete":
                 if (args.length < 2) {
-                    System.out.println("Usage: USBWhitelist delete [usb_id]");
+                    System.out.println("Usage: USBWhitelist delete [whitelist_line_number]");
+                    System.out.println("Please select a usb from the list below: \n");
+                    WhitelistManager.showWhitelist();
                 } else {
-                    WhitelistManager.modifyWhitelist(args[1], false);
+                    WhitelistManager.modifyWhitelist(args[1]);
                 }
                 break;
             case "list":

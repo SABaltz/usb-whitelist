@@ -1,4 +1,6 @@
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -11,41 +13,16 @@ public class WhitelistManager {
 
     private static final String WHITELIST_FILE = System.getProperty("user.home") + "/usb_whitelist.txt";
 
-    public static void modifyWhitelist(String usbId, boolean add) {
+    public static void modifyWhitelist(String lineNumber) {
         try {
-            List<String> whitelist = new ArrayList<>();
-            File whitelistFile = new File(WHITELIST_FILE);
-
-            if (whitelistFile.exists()) {
-                try (BufferedReader reader = new BufferedReader(new FileReader(whitelistFile))) {
-                    String line;
-                    while ((line = reader.readLine()) != null) {
-                        whitelist.add(line.trim());
-                    }
-                }
-            }
-
-            if (add) {
-                if (!whitelist.contains(usbId)) {
-                    whitelist.add(usbId);
-                    System.out.println("Added USB ID to whitelist: " + usbId);
-                } else {
-                    System.out.println("USB ID already in whitelist: " + usbId);
-                }
+            List<String> lines = Files.readAllLines(Path.of(WHITELIST_FILE));
+            int lineNumberToDelete = Integer.parseInt(lineNumber);
+            if (lineNumberToDelete >= 0 && lineNumberToDelete < lines.size()) {
+                lines.remove(lineNumberToDelete);
+                Files.write(Path.of(WHITELIST_FILE), lines);
+                System.out.println("Line " + (lineNumberToDelete) + " deleted successfully.");
             } else {
-                if (whitelist.contains(usbId)) {
-                    whitelist.remove(usbId);
-                    System.out.println("Removed USB ID from whitelist: " + usbId);
-                } else {
-                    System.out.println("USB ID not found in whitelist: " + usbId);
-                }
-            }
-
-            try (BufferedWriter writer = new BufferedWriter(new FileWriter(whitelistFile))) {
-                for (String id : whitelist) {
-                    writer.write(id);
-                    writer.newLine();
-                }
+                System.out.println("Invalid line number: " + (lineNumberToDelete + 1));
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -56,8 +33,9 @@ public class WhitelistManager {
         try (BufferedReader reader = new BufferedReader(new FileReader(WHITELIST_FILE))) {
             String line;
             System.out.println("USB Whitelist:");
+            int lineCount = 0;
             while ((line = reader.readLine()) != null) {
-                System.out.println(" - " + line.trim());
+                System.out.println(lineCount++ + ".)    " + line.trim());
             }
         } catch (IOException e) {
             e.printStackTrace();
