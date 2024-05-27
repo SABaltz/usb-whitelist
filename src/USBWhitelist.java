@@ -6,15 +6,13 @@ import java.util.regex.Pattern;
 
 public class USBWhitelist {
 
-    private static final String WHITELIST_FILE = "/etc/usb_whitelist.txt";
+    private static final String WHITELIST_FILE = System.getProperty("user.home") + "/usb_whitelist.txt";
     private static final Pattern DEVICE_PATTERN = Pattern.compile("Bus\\s+(\\d+)\\s+Device\\s+(\\d+).+ID\\s(\\w+:\\w+)\\s(.+)$", Pattern.CASE_INSENSITIVE);
     private static final List<String> WHITELIST = List.of("1234:5678", "abcd:ef12"); // Replace with your actual whitelist
+    private static Path filePath = Paths.get(WHITELIST_FILE);
 
     public static void main(String[] args) {
-        if (args.length == 0) {
-            System.out.println("Usage: USBWhitelist {start|stop|status|add|delete|list|whitelist} [usb_id]");
-            return;
-        }
+        checkWhiteListFileExistence();
 
         String command = args[0];
 
@@ -31,6 +29,8 @@ public class USBWhitelist {
             case "add":
                 if (args.length < 2) {
                     System.out.println("Usage: USBWhitelist add [usb_id]");
+                } else if (Objects.equals(args[1], "connected")) {
+                    System.out.println("Adding all connected whitelists");
                 } else {
                     modifyWhitelist(args[1], true);
                 }
@@ -50,6 +50,35 @@ public class USBWhitelist {
                 break;
             default:
                 System.out.println("Unknown command: " + command);
+        }
+    }
+
+    private static void checkWhiteListFileExistence() {
+        if (Files.exists(filePath)) {
+            System.out.println("File exists, continuing");
+        } else {
+            System.out.println("Whitelist File Not Found");
+            try {
+                // Ensure the parent directories exist
+                File parentDir = filePath.getParent().toFile();
+                if (parentDir != null && !parentDir.exists()) {
+                    if (parentDir.mkdirs()) {
+                        System.out.println("Parent directories created successfully");
+                    } else {
+                        System.err.println("Failed to create parent directories");
+                        return;
+                    }
+                }
+
+                // Create the file if it does not exist
+                if (Files.createFile(filePath).toFile().exists()) {
+                    System.out.println("File created successfully");
+                } else {
+                    System.out.println("File already exists");
+                }
+            } catch (IOException e) {
+                System.err.println("Failed to create the file: " + e.getMessage());
+            }
         }
     }
 
@@ -79,7 +108,8 @@ public class USBWhitelist {
 
                         if (!isWhitelisted(deviceFile)) {
                             System.out.println("Unauthorized USB device detected. Shutting down...");
-//                            Runtime.getRuntime().exec("shutdown -h now");
+                            // Uncomment the following line to actually shut down the system
+                            // Runtime.getRuntime().exec("shutdown -h now");
                         }
                     }
                 }
@@ -183,17 +213,6 @@ public class USBWhitelist {
         }
         return deviceIds;
     }
-//        File devDir = new File("/dev");
-//        File[] files = devDir.listFiles((dir, name) -> name.startsWith("sd")); // Assuming USB devices are named like 'sdX'
-//
-//        if (files != null && files.length > 0) {
-//            System.out.println("Connected USB devices:");
-//            for (File file : files) {
-//                System.out.println(" - " + file.getName());
-//            }
-//        } else {
-//            System.out.println("No USB devices connected.");
-//        }
 
     private static void showWhitelist() {
         try (BufferedReader reader = new BufferedReader(new FileReader(WHITELIST_FILE))) {
